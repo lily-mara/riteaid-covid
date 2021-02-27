@@ -1,0 +1,20 @@
+org: natemara
+app: riteaid-covid
+service: py-api
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: python3.8
+
+functions:
+  availability:
+    handler: handler.availability
+    events:
+      - http:
+          path: /availability/{zip_code}
+          method: get
+          cors: true
+
+plugins:
+  - serverless-python-requirements
