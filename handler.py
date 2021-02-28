@@ -39,9 +39,15 @@ def availability(event, context):
             'id': store_id,
             'address': store_data['address'],
             'possible_availability': possible_availability,
+            'zip': store_data['zipcode'],
+            'phone': store_data['fullPhone'],
         })
 
     return {
         'statusCode': 200,
         'body': json.dumps(stores),
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': True,
+        },
     }
