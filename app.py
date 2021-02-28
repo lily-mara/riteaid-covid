@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+
 import os
-import json
+import waitress
+from flask import Flask, jsonify
+
 
 import requests
 
@@ -7,11 +11,11 @@ import requests
 # result means that there are no slots available.
 KNOWN_NO_SLOTS = {'1': False, '2': False}
 
+app = Flask(__name__)
 
-def availability(event, context):
-    print(event)
-    zip_code = event['pathParameters']['zip_code']
 
+@app.route('/availability/<zip_code>')
+def availability(zip_code):
     store_response = requests.get(
         'https://www.riteaid.com/services/ext/v2/stores/getStores',
         params={
@@ -43,11 +47,15 @@ def availability(event, context):
             'phone': store_data['fullPhone'],
         })
 
-    return {
-        'statusCode': 200,
-        'body': json.dumps(stores),
-        'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': True,
-        },
-    }
+    return jsonify(stores)
+
+
+@app.after_request
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    return response
+
+
+if __name__ == "__main__":
+    waitress.serve(app, listen='*:8080')
