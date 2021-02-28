@@ -20,9 +20,7 @@ async function load_results() {
   const zip = document.getElementById('zip').value;
 
   const availability = await (
-    await fetch(
-      `https://56b89pgxxk.execute-api.us-east-1.amazonaws.com/dev/availability/${zip}`,
-    )
+    await fetch(`https://riteaid-covid.app.natemara.com/availability/${zip}`)
   ).json();
 
   loader.remove();
