@@ -3,7 +3,7 @@ services:
   backend:
     build: '.'
     ports:
-      - '8080:8080'
+      - '8080:80'
   frontend:
     image: python:3.8-slim
     entrypoint: python -m http.server --directory /public
