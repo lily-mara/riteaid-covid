@@ -3,6 +3,7 @@
 import os
 import waitress
 from flask import Flask, jsonify
+import beeline
 
 
 import requests
@@ -58,4 +59,12 @@ def after_request(response):
 
 
 if __name__ == "__main__":
+    key = os.environ.get('HONEYCOMB_API_KEY')
+    if key:
+        beeline.init(
+            writekey=key,
+            dataset='riteaid-covid',
+            service_name='riteaid-covid-http',
+        )
+
     waitress.serve(app, listen='*:80')
