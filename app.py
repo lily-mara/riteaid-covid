@@ -37,7 +37,7 @@ def availability(zip_code):
     for store_data in store_response:
         store_id = store_data['storeNumber']
 
-        t = threading.Thread(target=get_store_data_thread, args=(store_id, store_data, stores))
+        t = threading.Thread(target=beeline.traced_thread(get_store_data_thread), args=(store_id, store_data, stores))
         threads.append(t)
         t.start()
 
@@ -47,7 +47,6 @@ def availability(zip_code):
     return jsonify(stores)
 
 
-@beeline.traced_thread
 def get_store_data_thread(store_id, store_data, stores):
     with beeline.tracer(name='get store data thread'):
         slots = requests.get(
