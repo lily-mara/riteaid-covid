@@ -3,6 +3,7 @@
 import os
 import waitress
 from flask import Flask, jsonify
+import threading
 import beeline
 from beeline.middleware.flask import HoneyMiddleware
 from beeline.patch.requests import *
@@ -29,29 +30,41 @@ def availability(zip_code):
             'radius': '50',
         },
     ).json()['Data']['stores']
+
     stores = []
+    threads = []
 
     for store_data in store_response:
         store_id = store_data['storeNumber']
 
-        slots = requests.get(
-            'https://www.riteaid.com/services/ext/v2/vaccine/checkSlots',
-            params={
-                'storeNumber': store_id,
-            },
-        ).json()['Data']['slots']
+        t = threading.Thread(target=get_store_data_thread, args=(store_id, stores))
+        threads.append(t)
+        t.start()
 
-        possible_availability = slots != KNOWN_NO_SLOTS
-
-        stores.append({
-            'id': store_id,
-            'address': store_data['address'],
-            'possible_availability': possible_availability,
-            'zip': store_data['zipcode'],
-            'phone': store_data['fullPhone'],
-        })
+    for t in threads:
+        t.join()
 
     return jsonify(stores)
+
+
+@beeline.traced_thread
+def get_store_data_thread(store_id, store_data):
+    slots = requests.get(
+        'https://www.riteaid.com/services/ext/v2/vaccine/checkSlots',
+        params={
+            'storeNumber': store_id,
+        },
+    ).json()['Data']['slots']
+
+    possible_availability = slots != KNOWN_NO_SLOTS
+
+    store_data.append({
+        'id': store_id,
+        'address': store_data['address'],
+        'possible_availability': possible_availability,
+        'zip': store_data['zipcode'],
+        'phone': store_data['fullPhone'],
+    })
 
 
 @app.after_request
