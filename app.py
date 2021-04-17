@@ -46,8 +46,8 @@ def availability(zip_code):
             threads.append(t)
             t.start()
 
-    for t in threads:
-        t.join()
+        for t in threads:
+            t.join()
 
     beeline.add_context_field('possible_availability', sum(1 for i in stores if i['possible_availability']))
 
