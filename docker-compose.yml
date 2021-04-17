@@ -4,6 +4,8 @@ services:
     build: '.'
     ports:
       - '8080:80'
+    volumes:
+      - './app.py:/app.py'
   frontend:
     image: python:3.8-slim
     entrypoint: python -m http.server --directory /public
