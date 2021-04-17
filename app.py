@@ -24,25 +24,27 @@ HoneyMiddleware(app)
 def availability(zip_code):
     beeline.add_context_field('zip code', zip_code)
 
-    store_response = requests.get(
-        'https://www.riteaid.com/services/ext/v2/stores/getStores',
-        params={
-            'address': zip_code,
-            'attrFilter': 'PREF-112',
-            'fetchMechanismVersion': '2',
-            'radius': '50',
-        },
-    ).json()['Data']['stores']
+    with beeline.tracer(name='load stores in zip code'):
+        store_response = requests.get(
+            'https://www.riteaid.com/services/ext/v2/stores/getStores',
+            params={
+                'address': zip_code,
+                'attrFilter': 'PREF-112',
+                'fetchMechanismVersion': '2',
+                'radius': '50',
+            },
+        ).json()['Data']['stores']
 
     stores = []
     threads = []
 
-    for store_data in store_response:
-        store_id = store_data['storeNumber']
+    with beeline.tracer(name='get availability in stores'):
+        for store_data in store_response:
+            store_id = store_data['storeNumber']
 
-        t = threading.Thread(target=beeline.traced_thread(get_store_data_thread), args=(store_id, store_data, stores))
-        threads.append(t)
-        t.start()
+            t = threading.Thread(target=beeline.traced_thread(get_store_data_thread), args=(store_id, store_data, stores))
+            threads.append(t)
+            t.start()
 
     for t in threads:
         t.join()
