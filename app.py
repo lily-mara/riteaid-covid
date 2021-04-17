@@ -37,7 +37,7 @@ def availability(zip_code):
     for store_data in store_response:
         store_id = store_data['storeNumber']
 
-        t = threading.Thread(target=get_store_data_thread, args=(store_id, stores))
+        t = threading.Thread(target=get_store_data_thread, args=(store_id, store_data, stores))
         threads.append(t)
         t.start()
 
@@ -48,7 +48,7 @@ def availability(zip_code):
 
 
 @beeline.traced_thread
-def get_store_data_thread(store_id, store_data):
+def get_store_data_thread(store_id, store_data, stores):
     slots = requests.get(
         'https://www.riteaid.com/services/ext/v2/vaccine/checkSlots',
         params={
@@ -58,7 +58,7 @@ def get_store_data_thread(store_id, store_data):
 
     possible_availability = slots != KNOWN_NO_SLOTS
 
-    store_data.append({
+    stores.append({
         'id': store_id,
         'address': store_data['address'],
         'possible_availability': possible_availability,
