@@ -20,7 +20,10 @@ HoneyMiddleware(app)
 
 
 @app.route('/availability/<zip_code>')
+@beeline.traced(name='find availability')
 def availability(zip_code):
+    beeline.add_context_field('zip code', zip_code)
+
     store_response = requests.get(
         'https://www.riteaid.com/services/ext/v2/stores/getStores',
         params={
@@ -44,27 +47,28 @@ def availability(zip_code):
     for t in threads:
         t.join()
 
+    beeline.add_context_field('possible_availability', sum(1 for i in stores if i['possible_availability']))
+
     return jsonify(stores)
 
 
 def get_store_data_thread(store_id, store_data, stores):
-    with beeline.tracer(name='get store data thread'):
-        slots = requests.get(
-            'https://www.riteaid.com/services/ext/v2/vaccine/checkSlots',
-            params={
-                'storeNumber': store_id,
-            },
-        ).json()['Data']['slots']
+    slots = requests.get(
+        'https://www.riteaid.com/services/ext/v2/vaccine/checkSlots',
+        params={
+            'storeNumber': store_id,
+        },
+    ).json()['Data']['slots']
 
-        possible_availability = slots != KNOWN_NO_SLOTS
+    possible_availability = slots != KNOWN_NO_SLOTS
 
-        stores.append({
-            'id': store_id,
-            'address': store_data['address'],
-            'possible_availability': possible_availability,
-            'zip': store_data['zipcode'],
-            'phone': store_data['fullPhone'],
-        })
+    stores.append({
+        'id': store_id,
+        'address': store_data['address'],
+        'possible_availability': possible_availability,
+        'zip': store_data['zipcode'],
+        'phone': store_data['fullPhone'],
+    })
 
 
 @app.after_request
