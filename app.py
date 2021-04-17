@@ -4,6 +4,8 @@ import os
 import waitress
 from flask import Flask, jsonify
 import beeline
+from beeline.middleware.flask import HoneyMiddleware
+from beeline.patch.requests import *
 
 
 import requests
@@ -13,6 +15,7 @@ import requests
 KNOWN_NO_SLOTS = {'1': False, '2': False}
 
 app = Flask(__name__)
+HoneyMiddleware(app)
 
 
 @app.route('/availability/<zip_code>')
