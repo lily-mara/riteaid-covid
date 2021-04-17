@@ -49,22 +49,23 @@ def availability(zip_code):
 
 @beeline.traced_thread
 def get_store_data_thread(store_id, store_data, stores):
-    slots = requests.get(
-        'https://www.riteaid.com/services/ext/v2/vaccine/checkSlots',
-        params={
-            'storeNumber': store_id,
-        },
-    ).json()['Data']['slots']
+    with beeline.tracer(name='get store data thread'):
+        slots = requests.get(
+            'https://www.riteaid.com/services/ext/v2/vaccine/checkSlots',
+            params={
+                'storeNumber': store_id,
+            },
+        ).json()['Data']['slots']
 
-    possible_availability = slots != KNOWN_NO_SLOTS
+        possible_availability = slots != KNOWN_NO_SLOTS
 
-    stores.append({
-        'id': store_id,
-        'address': store_data['address'],
-        'possible_availability': possible_availability,
-        'zip': store_data['zipcode'],
-        'phone': store_data['fullPhone'],
-    })
+        stores.append({
+            'id': store_id,
+            'address': store_data['address'],
+            'possible_availability': possible_availability,
+            'zip': store_data['zipcode'],
+            'phone': store_data['fullPhone'],
+        })
 
 
 @app.after_request
